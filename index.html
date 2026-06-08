@@ -1463,19 +1463,6 @@
     const { createClient } = supabase;
     const db = createClient(SUPABASE_URL, SUPABASE_ANON);
 
-    const ISSUE_CLASS_MAP = {
-      "Transfer Mismatch":     "issue-transfer",
-      "Duplicate":             "issue-duplicate",
-      "Uncategorized":         "issue-uncategorized",
-      "Reconciliation Blocker":"issue-recon"
-    };
-
-    const STATUS_CLASS_MAP = {
-      "High":   "status-high",
-      "Medium": "status-medium",
-      "Low":    "status-low"
-    };
-
     let issues = [];
     let activeIndex = 0;
 
@@ -1486,7 +1473,7 @@
       const { data, error } = await db
         .from("cleanup_queue_issues")
         .select("*")
-        .order("txn_date", { ascending: false });
+        .order("transaction_date", { ascending: false });
 
       if (error) {
         console.error("Supabase error:", error.message);
@@ -1494,12 +1481,7 @@
         return;
       }
 
-      issues = data.map(row => ({
-        ...row,
-        selected:    false,
-        issueClass:  ISSUE_CLASS_MAP[row.issue_type]  ?? "issue-uncategorized",
-        statusClass: STATUS_CLASS_MAP[row.status]     ?? "status-medium"
-      }));
+      issues = data.map(row => ({ ...row, selected: false }));
 
       renderTable();
       if (issues.length) renderDetails(issues[0]);
@@ -1518,12 +1500,12 @@
               ${issue.selected ? "✓" : ""}
             </div>
           </td>
-          <td>${issue.txn_date}</td>
+          <td>${issue.date}</td>
           <td>${issue.description}</td>
           <td>${issue.vendor}</td>
           <td>${issue.amount}</td>
-          <td><span class="issue-badge ${issue.issueClass}">${issue.issue_type}</span></td>
-          <td>${issue.suggested_fix}</td>
+          <td><span class="issue-badge ${issue.issueClass}">${issue.issueType}</span></td>
+          <td>${issue.suggestedFix}</td>
           <td>
             <span class="confidence">
               ${issue.confidence}
@@ -1531,6 +1513,7 @@
             </span>
           </td>
           <td><span class="status-badge ${issue.statusClass}">${issue.status}</span></td>
+
           <td><button class="eye-btn" data-view="${index}">👁</button></td>
         `;
 
@@ -1576,21 +1559,21 @@
     function renderDetails(issue) {
       document.getElementById("detailTitle").textContent = issue.description;
       const issueTypeEl = document.getElementById("detailIssueType");
-      issueTypeEl.textContent = issue.issue_type;
+      issueTypeEl.textContent = issue.issueType;
       issueTypeEl.className = `issue-badge ${issue.issueClass}`;
 
-      document.getElementById("detailDate").textContent     = issue.txn_date;
+      document.getElementById("detailDate").textContent     = issue.date;
       document.getElementById("detailVendor").textContent   = issue.vendor;
       document.getElementById("detailAmount").textContent   = issue.amount;
       document.getElementById("detailAccount").textContent  = issue.account;
-      document.getElementById("detailTxnId").textContent    = issue.txn_id;
+      document.getElementById("detailTxnId").textContent    = issue.txnId;
       document.getElementById("detailReason1").textContent  = issue.reason1;
       document.getElementById("detailReason2").textContent  = issue.reason2;
-      document.getElementById("detailFix").textContent      = issue.detail_fix;
-      document.getElementById("beforeCategory").textContent = issue.before_category;
-      document.getElementById("beforeAccount").textContent  = issue.before_account;
-      document.getElementById("afterCategory").textContent  = issue.after_category;
-      document.getElementById("afterAccount").textContent   = issue.after_account;
+      document.getElementById("detailFix").textContent      = issue.detailFix;
+      document.getElementById("beforeCategory").textContent = issue.beforeCategory;
+      document.getElementById("beforeAccount").textContent  = issue.beforeAccount;
+      document.getElementById("afterCategory").textContent  = issue.afterCategory;
+      document.getElementById("afterAccount").textContent   = issue.afterAccount;
     }
 
     // Chip interaction
