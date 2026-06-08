@@ -1484,7 +1484,7 @@
 
     async function fetchIssues() {
       const { data, error } = await db
-        .from("cleanup_issues")
+        .from("cleanup_queue_issues")
         .select("*")
         .order("txn_date", { ascending: false });
 
